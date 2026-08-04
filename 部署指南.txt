@@ -1,0 +1,29 @@
+====================================================
+旅游相机 · 电脑端部署指南（全程网页点按，不用敲命令）
+====================================================
+
+【第一步】解压这个压缩包，得到 index.html（这就是旅游相机全部代码）
+
+【第二步】把代码放到你的 GitHub
+  1. 电脑浏览器打开 https://github.com 并登录（八杯水账号）
+  2. 点右上角 "+" → New repository
+  3. Repository name 填：travel-camera
+  4. 保持 Public → 点最下面 Create repository
+  5. 在新仓库页面，点 "uploading an existing file" 链接
+  6. 把 index.html 拖进虚线框 → 点绿色 Commit changes
+
+【第三步】用 Vercel 部署（得到永久链接）
+  1. 打开 https://vercel.com 并登录
+  2. 点 "Add New..." → Project
+  3. 找到 travel-camera 仓库，点 Import
+  4. 不用改任何设置，直接点 Deploy
+  5. 等几十秒，Vercel 会给你一个永久链接（形如 travel-camera-xxx.vercel.app）
+
+【完成】
+以后维护：在电脑 github.com 上打开 travel-camera 仓库 → 点 index.html →
+点铅笔图标编辑 → 改完 Commit，Vercel 会自动重新部署（约1分钟生效）。
+全程不用碰 WorkBuddy，也不用再把文件发给任何人。
+
+----------------------------------------------------
+当前可用的临时链接（在部署完成前可继续用）：
+https://a7774b9ac6a2d80d1.bj4.agentos-app.net

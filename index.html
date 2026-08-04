@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d10" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>实时海拔 · Altitude Live</title>
+<style>
+  :root{
+    --bg:#0b0d10; --card:#15191f; --card2:#1c2128; --line:#262d36;
+    --txt:#f2f5f8; --muted:#8a94a3; --accent:#34c759; --accent2:#0a84ff;
+    --warn:#ff9f0a; --err:#ff453a; --radius:20px;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:radial-gradient(120% 80% at 50% -10%,#16202b 0%,var(--bg) 55%);
+    color:var(--txt);font-family:var(--font);
+    display:flex;flex-direction:column;align-items:center;
+    min-height:100dvh;padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px);
+  }
+  .wrap{width:100%;max-width:460px;display:flex;flex-direction:column;gap:14px;flex:1;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 4px 0;}
+  header h1{font-size:17px;font-weight:600;margin:0;letter-spacing:.3px;}
+  .pill{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);
+        color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:.3s;}
+  .dot.ok{background:var(--accent);box-shadow:0 0 10px var(--accent);}
+  .dot.warn{background:var(--warn);}
+  .dot.err{background:var(--err);}
+
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;}
+  .tab{flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--muted);
+       padding:10px;border-radius:10px;cursor:pointer;transition:.15s;}
+  .tab.active{background:var(--card2);color:var(--txt);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .hero{background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);
+        border:1px solid var(--line);border-radius:var(--radius);
+        padding:26px 20px 22px;text-align:center;position:relative;overflow:hidden;}
+  .hero .label{font-size:13px;color:var(--muted);letter-spacing:1px;}
+  .hero .value{font-size:84px;font-weight:700;line-height:1.05;margin:6px 0 0;
+        font-variant-numeric:tabular-nums;letter-spacing:-2px;}
+  .hero .unit{font-size:22px;font-weight:500;color:var(--muted);margin-left:6px;}
+  .hero .sub{font-size:13px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums;}
+  .hero .src{position:absolute;top:12px;right:14px;font-size:11px;color:var(--muted);opacity:.7;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .cell{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
+  .cell .k{font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .cell .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;word-break:break-all;}
+
+  .bar{display:flex;gap:12px;margin-top:2px;}
+  .btn{flex:1;border:1px solid var(--line);background:var(--card2);color:var(--txt);
+       font-family:var(--font);font-size:15px;font-weight:600;padding:15px;border-radius:16px;
+       cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{background:var(--accent);border-color:transparent;color:#05140a;}
+  .btn.toggle.on{background:rgba(52,199,89,.16);border-color:var(--accent);color:var(--accent);}
+
+  .manual{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:none;}
+  .manual.show{display:block;}
+  .manual .row{display:flex;gap:10px;margin-bottom:10px;}
+  .manual input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+       color:var(--txt);font-family:var(--font);font-size:16px;padding:12px 14px;width:100%;}
+  .manual input:focus{outline:none;border-color:var(--accent2);}
+  .manual .hint{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  .banner{display:none;background:rgba(255,159,10,.12);border:1px solid var(--warn);
+       color:var(--warn);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;}
+  .banner.show{display:block;}
+
+  .cambox{position:relative;width:100%;aspect-ratio:3/4;max-height:58vh;border-radius:var(--radius);
+          overflow:hidden;background:#000;border:1px solid var(--line);}
+  #cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  #hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+       padding:16px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.85);}
+  #hudTop{font-size:13px;font-weight:600;opacity:.95;}
+  #hudBottom .elev{font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+  #hudBottom .line{font-size:12px;font-weight:600;margin-top:6px;opacity:.95;font-variant-numeric:tabular-nums;}
+  .camCtrl{display:flex;align-items:center;gap:12px;margin-top:14px;}
+  .camCtrl .btn{flex:1;font-size:14px;padding:12px 8px;}
+  .camCtrl .sysBtn{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:20px;padding:0;cursor:pointer;color:inherit;}
+  .camCtrl .sysBtn:active{background:rgba(255,255,255,.15);}
+
+  /* 手动编辑水印面板 */
+  .editPanel{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-end;justify-content:center;}
+  .editPanel.show{display:flex;}
+  .editSheet{width:100%;max-width:680px;background:var(--card);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 18px);max-height:88vh;overflow:auto;}
+  .editSheet h3{margin:0 0 4px;font-size:16px;}
+  .editSheet p.tip{margin:0 0 14px;font-size:12px;color:var(--muted);line-height:1.6;}
+  .editSheet label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;}
+  .editSheet input{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--txt);font-size:14px;font-family:var(--font);}
+  .editSheet .btnrow{display:flex;gap:10px;margin-top:18px;}
+  .editSheet .btnrow .btn{flex:1;}
+  .editToggle{font-size:12px;color:var(--accent);cursor:pointer;user-select:none;padding:6px 0;display:inline-block;}
+  .overTag{display:inline-block;font-size:11px;color:var(--accent);border:1px solid var(--accent);padding:1px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+  #shutter{flex:0 0 auto;width:72px;height:72px;border-radius:50%;border:4px solid #fff;
+       background:rgba(255,255,255,.15);cursor:pointer;transition:.12s;}
+  #shutter:active{transform:scale(.92);background:rgba(255,255,255,.4);}
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .flash.go{opacity:.9;}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;
+       overflow:hidden;width:fit-content;margin:0 auto;gap:0;}
+  .seg-btn{background:transparent;border:none;color:var(--muted);font-family:var(--font);
+       font-size:14px;font-weight:600;padding:10px 22px;cursor:pointer;transition:.15s;
+       min-width:72px;}
+  .seg-btn.active{background:var(--accent);color:#05140a;}
+  #shot{position:absolute;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;
+        align-items:center;justify-content:center;gap:14px;padding:16px;border-radius:var(--radius);}
+  #shot.show{display:flex;}
+  #shotImg{max-width:100%;max-height:62%;border-radius:12px;-webkit-user-drag:auto;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default;}
+  .shot-hint{font-size:12px;color:var(--muted);margin:0;text-align:center;line-height:1.5;}
+  #shot .row{display:flex;gap:12px;width:100%;}
+  #shot .btn{flex:1;}
+
+  footer{font-size:11px;color:var(--muted);text-align:center;padding:10px 4px 2px;opacity:.7;}
+
+  /* ---------- 落地卡片（分享入口，覆盖在 App 之上）---------- */
+  #landing{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:24px 16px calc(env(safe-area-inset-bottom) + 24px);
+    overflow-y:auto;background:radial-gradient(130% 90% at 50% -10%,#16202b 0%,var(--bg) 55%);}
+  #landing .lcard{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card) 0%,#10141a 100%);
+    border:1px solid var(--line);border-radius:22px;padding:30px 24px 26px;position:relative;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);}
+  #landing .lcard::before{content:"";position:absolute;top:-40%;left:-30%;width:160%;height:160%;
+    background:radial-gradient(circle at 30% 30%,rgba(52,199,89,.18),transparent 45%),
+               radial-gradient(circle at 70% 70%,rgba(10,132,255,.16),transparent 45%);pointer-events:none;}
+  #landing .licon{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+    font-size:38px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.4);margin-bottom:18px;position:relative;}
+  #landing .ltitle{font-size:26px;font-weight:700;letter-spacing:.5px;position:relative;}
+  #landing .lsub{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.6;position:relative;}
+  #landing .lbadge{display:inline-block;margin-top:14px;font-size:12px;color:var(--accent);
+    background:rgba(52,199,89,.12);border:1px solid rgba(52,199,89,.35);padding:5px 11px;border-radius:999px;position:relative;}
+  #landing .lfeats{margin:22px 0 4px;display:flex;flex-direction:column;gap:12px;position:relative;}
+  #landing .lfeat{display:flex;gap:12px;align-items:flex-start;}
+  #landing .lfeat .ldot{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--card2);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;}
+  #landing .lfeat .lt{font-size:14px;font-weight:600;line-height:1.4;}
+  #landing .lfeat .ld{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5;}
+  #landing .lbtn{width:100%;margin-top:24px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
+    font-size:17px;font-weight:700;padding:16px;background:var(--accent);color:#05140a;transition:.15s;position:relative;
+    display:flex;align-items:center;justify-content:center;gap:8px;}
+  #landing .lbtn:active{transform:scale(.97);}
+  #landing .lbtn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);margin-top:12px;}
+  #landing .lfoot{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;opacity:.7;position:relative;line-height:1.6;}
+  #landing .lcopied{font-size:12px;color:var(--accent);text-align:center;margin-top:10px;height:14px;opacity:0;transition:.2s;}
+  #landing .lcopied.show{opacity:1;}
+
+  .pills{display:flex;gap:8px;align-items:center;}
+  #licBadge{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);
+        color:var(--muted);border:1px solid var(--line);}
+  #licBadge.on{color:var(--accent);border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.12);}
+
+  /* ---------- 付费墙 / 授权 ---------- */
+  #paywall{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;
+    padding:24px 16px calc(env(safe-area-inset-bottom) + 24px);overflow-y:auto;
+    background:rgba(4,6,9,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #paywall .pcard{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card) 0%,#10141a 100%);
+    border:1px solid var(--line);border-radius:22px;padding:28px 24px 24px;position:relative;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  #paywall .pcrown{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+    font-size:32px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.4);margin-bottom:14px;}
+  #paywall .ptitle{font-size:24px;font-weight:700;}
+  #paywall .psub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;}
+  #paywall .pprice{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;}
+  #paywall .pprice .num{font-size:38px;font-weight:800;color:var(--accent);letter-spacing:-1px;}
+  #paywall .pprice .unit{font-size:14px;color:var(--muted);}
+  #paywall .pfeat{margin:14px 0 6px;display:flex;flex-direction:column;gap:9px;}
+  #paywall .pfeat .pf{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--txt);}
+  #paywall .pfeat .pf .tk{color:var(--accent);}
+  #paywall .pbuy{width:100%;margin-top:18px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
+    font-size:17px;font-weight:700;padding:15px;background:var(--accent);color:#05140a;transition:.15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;}
+  #paywall .pbuy:active{transform:scale(.97);}
+  #paywall .pclose{width:100%;margin-top:10px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
+    font-size:14px;font-weight:600;padding:12px;background:transparent;color:var(--muted);}
+  #paywall .pdivider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px;}
+  #paywall .pdivider::before,#paywall .pdivider::after{content:"";flex:1;height:1px;background:var(--line);}
+  #paywall .pin{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+    color:var(--txt);font-family:var(--font);font-size:15px;padding:12px 14px;text-transform:uppercase;}
+  #paywall .pin:focus{outline:none;border-color:var(--accent2);}
+  #paywall .pact{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--card2);
+    color:var(--txt);font-family:var(--font);font-size:15px;font-weight:600;padding:13px;cursor:pointer;}
+  #paywall .pmsg{font-size:12px;margin-top:10px;min-height:14px;text-align:center;}
+  #paywall .pmsg.ok{color:var(--accent);}
+  #paywall .pmsg.err{color:var(--err);}
+</style>
+</head>
+<body>
+<!-- 落地分享卡片：覆盖在 App 之上，点「打开旅游相机」后隐藏并启动定位（无跳转，避免微信出源码/子路径失效） -->
+<div id="landing">
+  <div class="lcard">
+    <div class="licon">🏔️</div>
+    <div class="ltitle">旅游相机</div>
+    <div class="lsub">导入原生相机拍的照片，一键烧录水印——<br/>再也不用担心丢失位置与时间。</div>
+    <div class="lbadge">🌐 实时海拔 · 位置 · 时间 一键加印</div>
+
+    <div class="lfeats">
+      <div class="lfeat">
+        <div class="ldot">📍</div>
+        <div><div class="lt">位置来自原照片</div><div class="ld">优先读取照片 EXIF/XMP 的 GPS，没有再退回实时定位</div></div>
+      </div>
+      <div class="lfeat">
+        <div class="ldot">⛰️</div>
+        <div><div class="lt">海拔精确现算</div><div class="ld">按经纬度查高程模型，比手机 GPS 海拔准得多</div></div>
+      </div>
+      <div class="lfeat">
+        <div class="ldot">🕒</div>
+        <div><div class="t">保留真实拍摄时间</div><div class="ld">取照片 EXIF 拍摄时间，华为全焦段相机能力不受影响</div></div>
+      </div>
+    </div>
+
+    <button class="lbtn" id="openAppBtn">打开旅游相机 →</button>
+    <button class="lbtn ghost" id="copyLinkBtn">复制链接</button>
+    <div class="lcopied" id="copiedTip">已复制链接</div>
+
+    <div class="lfoot">专业版 ¥19.9 永久解锁 · 免费试用 5 次<br/>PWA · 支持安卓 / 鸿蒙 · 需 HTTPS 与定位授权<br/>旅游相机 · 让每张照片都记得自己在哪、多高、何时</div>
+  </div>
+</div>
+
+<!-- 付费墙 / 授权 -->
+<div id="paywall">
+  <div class="pcard">
+    <div class="pcrown">👑</div>
+    <div class="ptitle" id="payTitle">解锁专业版</div>
+    <div class="psub" id="paySub">免费试用已用 0 / 5 次</div>
+    <div class="pprice"><span class="num">¥19.9</span><span class="unit">一次付费 · 永久免费使用</span></div>
+    <div class="pfeat">
+      <div class="pf"><span class="tk">✓</span><span>无限次相机叠加拍照加印海拔水印</span></div>
+      <div class="pf"><span class="tk">✓</span><span>无限次相册照片导入烧录海拔水印</span></div>
+      <div class="pf"><span class="tk">✓</span><span>实时海拔 / 位置 / 精度 / 速度全功能</span></div>
+    </div>
+    <button class="pbuy" id="buyBtn">¥19.9 永久解锁</button>
+    <div class="pdivider">已有激活码？</div>
+    <input class="pin" id="payCode" placeholder="输入激活码 如 TC-XXXX-XX" />
+    <button class="pact" id="actBtn">激活永久版</button>
+    <div class="pmsg" id="payMsg"></div>
+    <button class="pclose" id="payClose">稍后再说（剩 5 次试用）</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>实时海拔</h1>
+    <div class="pills">
+      <div class="pill"><span class="dot" id="gpsDot"></span><span id="gpsText">定位中…</span></div>
+      <div class="pill" id="licBadge">试用剩 5 次</div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" id="tabDash" data-view="dash">仪表</div>
+    <div class="tab" id="tabCam" data-view="cam">相机叠加</div>
+    <div class="tab" id="tabStamp" data-view="stamp">照片加印</div>
+  </div>
+
+  <section class="view active" id="viewDash">
+    <div class="hero">
+      <div class="src" id="srcTag">—</div>
+      <div class="label">当前海拔高程</div>
+      <div class="value"><span id="elev">--</span><span class="unit">米</span></div>
+      <div class="sub"><span id="elevFt">— 英尺</span> · 更新于 <span id="upd">—</span></div>
+    </div>
+    <div class="grid">
+      <div class="cell"><div class="k">纬度</div><div class="v" id="lat">—</div></div>
+      <div class="cell"><div class="k">经度</div><div class="v" id="lon">—</div></div>
+      <div class="cell"><div class="k">水平精度</div><div class="v" id="acc">—</div></div>
+      <div class="cell"><div class="k">移动速度</div><div class="v" id="spd">—</div></div>
+    </div>
+    <div class="cell"><div class="k">位置（地址）</div><div class="v" id="addr" style="font-size:16px">定位中…</div></div>
+    <div class="cell"><div class="k">GPS 原始海拔（参考）</div><div class="v" id="gpsAlt">—</div></div>
+    <div class="banner" id="banner"></div>
+    <div class="bar">
+      <button class="btn primary toggle on" id="followBtn">⏸ 停止跟随</button>
+      <button class="btn" id="manualBtn">✎ 手动查询</button>
+    </div>
+    <div class="manual" id="manualBox">
+      <div class="row">
+        <input id="inLat" type="number" step="any" placeholder="纬度 如 39.9042" />
+        <input id="inLon" type="number" step="any" placeholder="经度 如 116.4074" />
+      </div>
+      <button class="btn primary" id="queryBtn" style="width:100%">查询该点海拔</button>
+      <div class="hint">无 GPS 权限或在电脑上也可手动查询任意坐标海拔。</div>
+    </div>
+  </section>
+
+  <section class="view" id="viewCam">
+    <div class="cambox" id="cambox">
+      <video id="cam" playsinline muted autoplay></video>
+      <div id="hud">
+        <div id="hudTop">—</div>
+        <div id="hudBottom">
+          <div class="elev" id="hudElev">-- m</div>
+          <div class="line" id="hudAddr">📍 定位中…</div>
+          <div class="line" id="hudMeta">精度 — · 速度 —</div>
+        </div>
+      </div>
+      <div class="flash" id="flash"></div>
+      <div id="shot">
+        <img id="shotImg" alt="快照" />
+        <p class="shot-hint" id="shotHint"></p>
+        <div class="row">
+          <button class="btn primary" id="saveBtn">⬇ 下载到手机</button>
+          <button class="btn" id="retakeBtn">重拍</button>
+        </div>
+      </div>
+    </div>
+    <div class="seg" id="aspectSeg">
+      <button class="seg-btn active" data-aspect="9:16">9:16</button>
+      <button class="seg-btn" data-aspect="4:3">4:3</button>
+      <button class="seg-btn" data-aspect="16:9">16:9</button>
+    </div>
+    <div class="camCtrl">
+      <button class="btn" id="flipBtn">翻转镜头</button>
+      <button id="shutter" title="拍照"></button>
+      <button class="btn" id="stopCamBtn">关闭</button>
+      <button class="sysBtn" id="sysCamBtn" title="用系统相机拍照（照片不进 in-app 流）">📷</button>
+    </div>
+    <input id="sysCamInput" type="file" accept="image/*" capture="environment" hidden />
+    <div class="banner" id="camBanner"></div>
+  </section>
+
+  <section class="view" id="viewStamp">
+    <div class="cell" style="text-align:center;padding:20px 18px">
+      <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px">
+        从相册选择一张<b style="color:var(--txt)">原生相机</b>拍的照片，自动读取拍摄位置与海拔，烧录同款水印后保存回相册。华为 Mate 60 Pro 的全部相机能力都不受影响。
+      </div>
+      <label class="btn primary" style="display:inline-flex;width:auto;padding:14px 24px">
+        📂 选择照片
+        <input id="pickFile" type="file" accept="image/*" hidden />
+      </label>
+    </div>
+    <div class="banner" id="stampBanner"></div>
+    <div id="stampPreview" style="display:none">
+      <div style="border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#000">
+        <img id="stampImg" alt="加印结果" style="width:100%;display:block;-webkit-user-drag:auto;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default" />
+      </div>
+      <div class="bar" style="margin-top:14px">
+        <button class="btn primary" id="saveStampBtn">⬇ 下载到手机</button>
+        <button class="btn" id="saveToAlbumBtn">📲 保存到相册</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="rePickBtn" style="flex:1;min-width:120px">↻ 重选</button>
+        <button class="btn" id="editStampBtn" style="flex:1;min-width:120px">✏️ 手动修改水印 <span id="overTagSlot"></span></button>
+      </div>
+      <p class="shot-hint" id="stampHint" style="margin-top:10px"></p>
+    </div>
+  </section>
+
+  <!-- 手动编辑水印面板（无信号 / 离线时使用） -->
+  <div class="editPanel" id="editPanel">
+    <div class="editSheet">
+      <h3>手动修改水印 <span class="overTag" id="editStatusTag" style="display:none">已启用</span></h3>
+      <p class="tip">没有信号或地址不对时，手工填写后会写进水印。再次拍照/加印时生效；不需要了随时"清空"。</p>
+      <label>海拔（米）</label>
+      <input id="ovElev" type="number" inputmode="decimal" placeholder="如 1860" />
+      <label>地址 / 地点</label>
+      <input id="ovAddr" type="text" placeholder="如 四川省阿坝州·四姑娘山·长坪沟" />
+      <label>时间（YYYY-MM-DD HH:mm）</label>
+      <input id="ovTime" type="text" placeholder="留空就用拍照时间" />
+      <label>纬度（选填）</label>
+      <input id="ovLat" type="number" inputmode="decimal" placeholder="如 30.1234" />
+      <label>经度（选填）</label>
+      <input id="ovLon" type="number" inputmode="decimal" placeholder="如 102.5678" />
+      <div class="btnrow">
+        <button class="btn" id="ovClearBtn">清空手动</button>
+        <button class="btn primary" id="ovSaveBtn">保存并应用到水印</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>海拔 Open-Meteo · 地址 BigDataCloud · 定位/摄像均需 HTTPS 与授权</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const M2FT = 3.280839895;
+let watchId = null, following = true, lastQuery = 0, camStream = null, facingEnv = true, aspectMode = '9:16';
+let lastGeoTime = 0, lastGeoKey = '';
+
+/* ---------- 手动水印覆盖（无信号 / 离线场景） ---------- */
+const OV = { enable:false, elev:null, addr:'', date:'', lat:null, lon:null };
+const OV_KEY = 'travelcam.override.v1';
+function loadOverride(){
+  try{
+    const s = localStorage.getItem(OV_KEY);
+    if(!s) return;
+    const o = JSON.parse(s);
+    if(o && typeof o==='object'){
+      OV.enable = !!o.enable;
+      OV.elev = numOrNull(o.elev);
+      OV.addr = (o.addr==null)?'':String(o.addr);
+      OV.date = (o.date==null)?'':String(o.date);
+      OV.lat = numOrNull(o.lat);
+      OV.lon = numOrNull(o.lon);
+    }
+  }catch(e){}
+}
+function saveOverride(){ localStorage.setItem(OV_KEY, JSON.stringify(OV)); reflectOverrideUI(); }
+function clearOverride(){
+  OV.enable=false; OV.elev=null; OV.addr=''; OV.date=''; OV.lat=null; OV.lon=null;
+  try{ localStorage.removeItem(OV_KEY); }catch(e){}
+  reflectOverrideUI(); renderEditInputs();
+}
+function reflectOverrideUI(){
+  const tag = $('editStatusTag'); if(tag) tag.style.display = OV.enable ? 'inline-block' : 'none';
+  const slot = $('overTagSlot'); if(slot) slot.innerHTML = OV.enable ? '<span class="overTag">已修改</span>' : '';
+}
+function renderEditInputs(){
+  $('ovElev').value = (OV.elev==null)?'':''+OV.elev;
+  $('ovAddr').value = OV.addr||'';
+  $('ovTime').value = OV.date||'';
+  $('ovLat').value  = (OV.lat==null)?'':''+OV.lat;
+  $('ovLon').value  = (OV.lon==null)?'':''+OV.lon;
+}
+function openEditPanel(){ renderEditInputs(); $('editPanel').classList.add('show'); }
+function closeEditPanel(){ $('editPanel').classList.remove('show'); }
+function commitEdit(){
+  const e = $('ovElev').value.trim();
+  const a = $('ovAddr').value.trim();
+  const t = $('ovTime').value.trim();
+  const la= $('ovLat').value.trim();
+  const lo= $('ovLon').value.trim();
+  OV.elev = numOrNull(e);
+  OV.addr = a;
+  OV.date = t;
+  OV.lat  = numOrNull(la);
+  OV.lon  = numOrNull(lo);
+  OV.enable = (OV.elev!=null) || (OV.addr!=='') || (OV.date!=='') || (OV.lat!=null) || (OV.lon!=null);
+  saveOverride();
+  closeEditPanel();
+  if($('stampPreview').style.display!=='none') burnStamp();
+}
+function numOrNull(v){ if(v===''||v==null) return null; const n=Number(v); return isNaN(n)?null:n; }
+function parseUserDate(s){
+  if(!s) return null;
+  const m = String(s).match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if(m){
+    const Y=+m[1], Mo=+m[2]-1, D=+m[3], h=+(m[4]||0), mi=+(m[5]||0), ss=+(m[6]||0);
+    return new Date(Y,Mo,D,h,mi,ss);
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+loadOverride(); reflectOverrideUI();
+
+const state = {lat:null, lon:null, acc:null, spd:null, elev:null, gpsAlt:null, src:null, upd:null, addr:''};
+function fmt(n, d=4){ return (n==null||isNaN(n)) ? '—' : Number(n).toFixed(d); }
+
+/* ---------- 定位 / 海拔 ---------- */
+function setGps(s, t){ $('gpsDot').className='dot'+(s?(' '+s):''); $('gpsText').textContent=t; }
+
+async function getElevation(lat, lon){
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
+    const d = await r.json();
+    if(d.elevation && d.elevation.length) return {elev:d.elevation[0], src:'Open-Meteo'};
+  }catch(e){}
+  try{
+    const r = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`);
+    const d = await r.json();
+    if(d.results && d.results[0]) return {elev:d.results[0].elevation, src:'Open-Elevation'};
+  }catch(e){}
+  throw new Error('海拔服务不可用');
+}
+
+async function updateElevation(lat, lon){
+  const now = Date.now();
+  if(now - lastQuery < 800) return;
+  lastQuery = now;
+  try{
+    const {elev, src} = await getElevation(lat, lon);
+    state.elev = elev; state.src = src;
+    state.upd = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+    applyState();
+  }catch(e){ state.src=null; applyState(); }
+}
+
+/* ---------- 逆地理：经纬度 → 地址 ---------- */
+async function reverseGeocode(lat, lon){
+  const key = lat.toFixed(3)+','+lon.toFixed(3);   // ~110m 精度内复用
+  const now = Date.now();
+  if(key === lastGeoKey && now - lastGeoTime < 10000) return state.addr;
+  if(now - lastGeoTime < 1500) return state.addr;   // 限流 1.5s
+  lastGeoTime = now; lastGeoKey = key;
+  try{
+    const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`);
+    const d = await r.json();
+    const parts = [d.principalSubdivision, d.city, d.locality].filter(Boolean);
+    state.addr = parts.join('') || d.countryName || '';
+    applyState();
+  }catch(e){}
+  return state.addr;
+}
+
+function onPos(p){
+  const c = p.coords;
+  setGps('ok','已锁定');
+  state.lat=c.latitude; state.lon=c.longitude;
+  state.acc = (c.accuracy!=null)? Math.round(c.accuracy) : null;
+  state.spd = (c.speed!=null)? c.speed : null;
+  state.gpsAlt = (c.altitude!=null)? Math.round(c.altitude)+' m（±'+(c.altitudeAccuracy!=null?Math.round(c.altitudeAccuracy):'?')+'）' : '不支持';
+  applyState();
+  updateElevation(c.latitude, c.longitude);
+  reverseGeocode(c.latitude, c.longitude);
+}
+function onErr(e){
+  if(e.code===e.PERMISSION_DENIED){ setGps('err','已拒绝'); showBanner('定位权限被拒绝。请通过 HTTPS 打开并允许位置权限，或用「手动查询」。'); }
+  else if(e.code===e.POSITION_UNAVAILABLE){ setGps('warn','信号弱'); showBanner('无法获取 GPS 信号，请到开阔处重试。'); }
+  else setGps('warn','超时');
+}
+function showBanner(m){ const b=$('banner'); b.textContent=m; b.classList.add('show'); }
+function hideBanner(){ $('banner').classList.remove('show'); }
+function showCamBanner(m){ const b=$('camBanner'); if(!m){ b.classList.remove('show'); return; } b.textContent=m; b.classList.add('show'); }
+
+// 用 data: URL 触发下载（避开部分浏览器对 blob 下载的限制，且不会弹新标签页）
+function triggerDownload(href, name){
+  try{
+    const a = document.createElement('a');
+    a.href = href; a.download = name; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ try{ document.body.removeChild(a); }catch(e){} }, 1500);
+    return true;
+  }catch(e){ return false; }
+}
+
+// 是否微信内置浏览器（微信会拦截 <a download> 与 blob 下载，只能长按图片保存）
+function isWeChat(){ return /micromessenger/i.test(navigator.userAgent||''); }
+
+// dataURL -> Blob（系统分享需要 File）
+function dataUrlToBlob(dataUrl){
+  const parts = dataUrl.split(',');
+  const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const bin = atob(parts[1]);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type: mime});
+}
+
+// 方式一：下载到「下载管理」（dataURL 直接触发，不弹新标签页）
+async function saveDownload(dataUrl, bannerFn){
+  if(!dataUrl) return;
+  try{
+    triggerDownload(dataUrl, '海拔照片.jpg');
+    bannerFn(isWeChat()
+      ? '微信内无法直接下载，请长按上方图片 →「保存图片」'
+      : '✓ 已触发下载，请到「下载管理」查看（若未出现，请长按上方图片保存）');
+  }catch(e){
+    bannerFn('下载失败，请长按上方图片保存到相册');
+  }
+}
+
+// 方式二：系统分享 → 保存到相册（部分机型失败，作为备选）
+async function saveToAlbum(dataUrl, bannerFn){
+  if(!dataUrl) return;
+  try{
+    const blob = dataUrlToBlob(dataUrl);
+    const file = new File([blob], '海拔照片.jpg', {type: blob.type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'海拔照片'});
+      bannerFn('✓ 已调起分享，选「保存到相册」即可');
+      return;
+    }
+    bannerFn('当前浏览器不支持系统分享，请长按上方图片保存到相册');
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    bannerFn('分享失败，请长按上方图片保存到相册');
+  }
+}
+
+function applyState(){
+  const elevTxt = state.elev!=null? Math.round(state.elev) : '--';
+  const ft = state.elev!=null? Math.round(state.elev*M2FT).toLocaleString() : '—';
+  const accTxt = state.acc!=null? '±'+state.acc+' m' : '—';
+  const spdTxt = state.spd!=null? (state.spd>0? (state.spd*3.6).toFixed(1)+' km/h' : '静止') : '—';
+  $('elev').textContent=elevTxt; $('elevFt').textContent=ft+' 英尺';
+  $('srcTag').textContent=state.src||'—'; $('upd').textContent=state.upd||'—';
+  $('lat').textContent=fmt(state.lat,5); $('lon').textContent=fmt(state.lon,5);
+  $('acc').textContent=accTxt; $('spd').textContent=spdTxt;
+  $('gpsAlt').textContent=state.gpsAlt||'—'; $('addr').textContent=state.addr||'定位中…';
+  $('hudElev').textContent=elevTxt+' m';
+  $('hudAddr').textContent='📍 '+(state.addr||'定位中…');
+  $('hudMeta').textContent='精度 '+accTxt+' · 速度 '+spdTxt;
+  $('hudTop').textContent=(state.upd||new Date().toLocaleTimeString('zh-CN',{hour12:false}))+(state.src?(' · '+state.src):'');
+}
+function startFollow(){
+  if(!navigator.geolocation){ setGps('err','不支持'); showBanner('此浏览器不支持定位，请用「手动查询」。'); return; }
+  setGps('','定位中…'); hideBanner();
+  watchId = navigator.geolocation.watchPosition(onPos, onErr, {enableHighAccuracy:true, maximumAge:0, timeout:15000});
+}
+function stopFollow(){
+  if(watchId!=null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  setGps('warn','已暂停');
+  $('followBtn').textContent='▶ 开始跟随'; $('followBtn').classList.remove('on'); following=false;
+}
+
+$('followBtn').addEventListener('click', ()=>{
+  if(following){ stopFollow(); }
+  else{ following=true; $('followBtn').textContent='⏸ 停止跟随'; $('followBtn').classList.add('on'); startFollow(); }
+});
+$('manualBtn').addEventListener('click', ()=> $('manualBox').classList.toggle('show'));
+$('queryBtn').addEventListener('click', ()=>{
+  const la=parseFloat($('inLat').value), lo=parseFloat($('inLon').value);
+  if(isNaN(la)||isNaN(lo)){ showBanner('请输入有效的纬度和经度。'); return; }
+  hideBanner();
+  state.lat=la; state.lon=lo; state.acc='手动'; state.spd=null; state.gpsAlt='—';
+  applyState(); updateElevation(la,lo);
+});
+
+/* ---------- 相机 ---------- */
+async function startCamera(){
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal: facingEnv?'environment':'user'}}, audio:false});
+    const v=$('cam'); v.srcObject=camStream; await v.play();
+    $('camBanner').classList.remove('show');
+  }catch(e){
+    const b=$('camBanner'); b.textContent='无法打开摄像头：'+(e.name==='NotAllowedError'?'权限被拒绝':e.message)+'。请允许摄像头权限（需 HTTPS）。'; b.classList.add('show');
+  }
+}
+function stopCamera(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; $('cam').srcObject=null; }
+}
+$('flipBtn').addEventListener('click', ()=>{ facingEnv=!facingEnv; stopCamera(); startCamera(); });
+$('stopCamBtn').addEventListener('click', ()=>{ stopCamera(); switchView('dash'); });
+
+function fmtTime(d){ const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; }
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function fit(ctx,text,maxW){ if(ctx.measureText(text).width<=maxW) return text;
+  let t=text; while(t.length>1 && ctx.measureText(t+'…').width>maxW) t=t.slice(0,-1); return t+'…'; }
+
+function drawWatermark(ctx, w, h, opts){
+  opts = opts || {};
+  let elev = (opts.elev!=null) ? opts.elev : state.elev;
+  let addr = (opts.addr!=null) ? opts.addr : (state.addr||'位置获取中');
+  let date = opts.date || new Date();
+  // 手动覆盖优先（无信号 / 离线场景）
+  if(OV.enable){
+    if(OV.elev!=null) elev = OV.elev;
+    if(OV.addr)      addr = OV.addr;
+    if(OV.date){
+      const d = parseUserDate(OV.date);
+      if(d) date = d;
+    }
+  }
+  const f=Math.min(h/100, 18), F='-apple-system,"PingFang SC",sans-serif';
+  const padX=w*0.05, cardX=padX, cardW=w-padX*2, inner=w*0.045, r=f*3;
+  const elevSize=f*7.5, addrSize=f*2.8, timeSize=f*2.9, gap=f*1.5;
+  ctx.font=`700 ${elevSize}px ${F}`;
+  const eh=elevSize, ah=addrSize*1.15, th=timeSize*1.15;
+  const cardH = inner*2 + eh + gap + ah + gap + th;
+  const cardY = h - h*0.05 - cardH;
+  const g=ctx.createLinearGradient(0,h,0,h*0.5); g.addColorStop(0,'rgba(0,0,0,.18)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,h*0.45,w,h*0.55);
+  rr(ctx,cardX,cardY,cardW,cardH,r); ctx.fillStyle='rgba(190,190,190,.5)'; ctx.fill();
+  ctx.fillStyle='#34c759'; rr(ctx,cardX+inner,cardY+inner*0.35,f*7,f*0.55,r*0.3); ctx.fill();
+  ctx.textBaseline='top'; ctx.textAlign='left';
+  ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=f*1.6; ctx.shadowOffsetY=f*0.4;
+  let y=cardY+inner;
+  ctx.font=`700 ${elevSize}px ${F}`; ctx.fillStyle='#fff';
+  ctx.fillText('海拔 '+(elev!=null?Math.round(elev):'--')+' m', cardX+inner, y);
+  y+=eh+gap;
+  ctx.font=`600 ${addrSize}px ${F}`; ctx.fillStyle='rgba(255,255,255,.94)';
+  ctx.fillText(fit(ctx,'📍 '+addr, cardW-inner*2), cardX+inner, y);
+  y+=ah+gap;
+  ctx.font=`500 ${timeSize}px ${F}`; ctx.fillStyle='rgba(255,255,255,.82)';
+  ctx.fillText(fit(ctx,'🕒 '+fmtTime(date), cardW-inner*2), cardX+inner, y);
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+}
+
+async function capture(){
+  if(!gateAction()) return;
+  const v=$('cam'); const vw=v.videoWidth, vh=v.videoHeight; if(!vw) return;
+  if(!state.addr && state.lat!=null){ await reverseGeocode(state.lat, state.lon); }
+
+  // 1) 原帧
+  const tmp=document.createElement('canvas'); tmp.width=vw; tmp.height=vh;
+  tmp.getContext('2d').drawImage(v,0,0,vw,vh);
+
+  // 2) 用窗口尺寸判断设备朝向（比 screen.orientation 更可靠）
+  const devLandscape = (window.innerWidth > window.innerHeight);
+  const frameLandscape = (vw > vh);
+
+  // 帧朝向与设备不一致时旋转 90°
+  let rot = 0, ow = vw, oh = vh;
+  if(devLandscape !== frameLandscape){
+    rot = 1;   // 若方向反了改这里为 -1
+    ow = vh; oh = vw;
+  }
+  const rotCanvas=document.createElement('canvas'); rotCanvas.width=ow; rotCanvas.height=oh;
+  const rctx=rotCanvas.getContext('2d');
+  if(rot!==0){ rctx.translate(ow/2,oh/2); rctx.rotate(rot*Math.PI/2); rctx.translate(-vw/2,-vh/2); rctx.drawImage(tmp,0,0); }
+  else { rctx.drawImage(tmp,0,0); }
+
+  // 3) 按目标宽高比（宽/高）居中裁剪
+  //    9:16 → 始终竖图；16:9 / 4:3 → 跟随设备方向
+  let targetWH;
+  if(aspectMode==='9:16'){ targetWH = 9/16; }
+  else if(aspectMode==='16:9'){ targetWH = devLandscape ? 16/9 : 9/16; }
+  else { targetWH = devLandscape ? 4/3 : 3/4; }
+  let cw, ch, sx, sy;
+  const cur = ow/oh;   // 校正方向后的宽/高
+  if(cur > targetWH){ ch=oh; cw=Math.round(oh*targetWH); sx=Math.round((ow-cw)/2); sy=0; }
+  else { cw=ow; ch=Math.round(ow/targetWH); sx=0; sy=Math.round((oh-ch)/2); }
+  const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+  const ctx=out.getContext('2d');
+  ctx.drawImage(rotCanvas, sx, sy, cw, ch, 0, 0, cw, ch);
+
+  // 4) 水印
+  drawWatermark(ctx, cw, ch);
+
+  const flEl=$('flash'); flEl.classList.add('go'); setTimeout(()=>flEl.classList.remove('go'),250);
+  // 用 dataURL 作为图片 src：微信/华为长按图片即可保存（blob: 保存会失败）
+  const shotDataUrl = out.toDataURL('image/jpeg', 0.92);
+  $('shotImg').src = shotDataUrl;
+  $('saveBtn').onclick = ()=> saveDownload(shotDataUrl, showCamBanner);
+  $('shot').classList.add('show');
+  countTrial();
+}
+$('shutter').addEventListener('click', capture);
+$('retakeBtn').addEventListener('click', ()=> $('shot').classList.remove('show'));
+
+// 系统原生相机拍照（关闭 in-app 流避免占用）
+$('sysCamBtn').addEventListener('click', ()=>{
+  if(!gateAction()) return;
+  stopCamera();
+  try{ $('sysCamInput').value=''; }catch(e){}
+  $('sysCamInput').click();
+});
+$('sysCamInput').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  stopCamera();
+  switchView('stamp');
+  setTimeout(()=> handleStamp(f), 50);
+});
+
+// 手动修改水印
+$('editStampBtn').addEventListener('click', openEditPanel);
+$('ovSaveBtn').addEventListener('click', commitEdit);
+$('ovClearBtn').addEventListener('click', clearOverride);
+$('editPanel').addEventListener('click', e=>{ if(e.target===$('editPanel')) closeEditPanel(); });
+
+function isLandscape(){ return window.innerWidth > window.innerHeight; }
+function applyAspect(){
+  const landscape = isLandscape();
+  let ar;
+  if(aspectMode==='9:16'){ ar = '9 / 16'; }
+  else if(aspectMode==='16:9'){ ar = landscape ? '16 / 9' : '9 / 16'; }
+  else { ar = landscape ? '4 / 3' : '3 / 4'; }
+  $('cambox').style.aspectRatio = ar;
+}
+$('aspectSeg').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.seg-btn'); if(!btn) return;
+  aspectMode = btn.dataset.aspect;
+  applyAspect();
+  document.querySelectorAll('.seg-btn').forEach(b=> b.classList.toggle('active', b===btn));
+});
+$('stopCamBtn').addEventListener('click', ()=>{ stopCamera(); switchView('dash'); });
+// 旋转手机时同步预览框比例
+window.addEventListener('resize', ()=>{ if($('viewCam').classList.contains('active')) applyAspect(); });
+
+function switchView(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
+  $('viewDash').classList.toggle('active', name==='dash');
+  $('viewCam').classList.toggle('active', name==='cam');
+  $('viewStamp').classList.toggle('active', name==='stamp');
+  if(name==='cam') startCamera(); else stopCamera();
+}
+document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> switchView(t.dataset.view)));
+
+/* ---------- 照片加印（导入即加印） ---------- */
+function showStampBanner(m){ const b=$('stampBanner'); if(!m){ b.classList.remove('show'); return; } b.textContent=m; b.classList.add('show'); }
+
+// XMP 解析（华为/苹果常把 GPS 写在 XMP 而非 EXIF GPS IFD）
+function parseXmp(arrayBuffer){
+  try{
+    const view = new DataView(arrayBuffer);
+    if(arrayBuffer.byteLength < 12 || view.getUint16(0) !== 0xFFD8) return null;
+    const sig = 'http://ns.adobe.com/xap/1.0/\0';
+    let offset = 2;
+    while(offset < view.byteLength){
+      const marker = view.getUint16(offset);
+      if((marker & 0xFF00) !== 0xFF00) break;
+      const segType = marker & 0xFF;
+      if(segType === 0xE1){
+        let isXmp = (offset + 4 + sig.length <= view.byteLength);
+        if(isXmp){
+          for(let i=0;i<sig.length;i++){
+            if(view.getUint8(offset+4+i) !== sig.charCodeAt(i)){ isXmp = false; break; }
+          }
+        }
+        if(isXmp){
+          const segLen = view.getUint16(offset+2);
+          const xmpStart = offset + 4 + sig.length;
+          const xmpEnd = offset + 2 + segLen;
+          const n = Math.max(0, Math.min(xmpEnd - xmpStart, view.byteLength - xmpStart));
+          const bytes = new Uint8Array(arrayBuffer, xmpStart, n);
+          const text = new TextDecoder('utf-8').decode(bytes);
+          return parseXmpText(text);
+        }
+      }
+      if(segType === 0xDA) break;
+      const segLen = view.getUint16(offset+2);
+      if(segLen <= 0) break;
+      offset += 2 + segLen;
+    }
+    return null;
+  }catch(e){ return null; }
+}
+
+function parseXmpText(text){
+  function tag(name){
+    const m = text.match(new RegExp('<exif:'+name+'>([^<]+)</exif:'+name+'>'));
+    return m ? m[1].trim() : null;
+  }
+  function parseCoord(s){
+    if(!s) return null;
+    const parts = s.split(',').map(p=>{
+      const r = p.split('/');
+      if(r.length===2){ const n=parseFloat(r[0]), d=parseFloat(r[1]); return d? n/d : 0; }
+      return parseFloat(p) || 0;
+    });
+    if(parts.length < 3) return null;
+    return parts[0] + parts[1]/60 + parts[2]/3600;
+  }
+  function parseAlt(s){
+    if(!s) return null;
+    const r = s.split('/');
+    if(r.length===2){ const n=parseFloat(r[0]), d=parseFloat(r[1]); return d? n/d : null; }
+    const v = parseFloat(s);
+    return isNaN(v) ? null : v;
+  }
+  let lat = parseCoord(tag('GPSLatitude'));
+  let lon = parseCoord(tag('GPSLongitude'));
+  const latRef = tag('GPSLatitudeRef'), lonRef = tag('GPSLongitudeRef');
+  if(lat!=null && latRef==='S') lat = -lat;
+  if(lon!=null && lonRef==='W') lon = -lon;
+  let alt = parseAlt(tag('GPSAltitude'));
+  const altRef = tag('GPSAltitudeRef');
+  if(alt!=null && altRef==='1') alt = -alt;
+  return {lat, lon, alt};
+}
+
+// 轻量 EXIF 解析：仅取 GPS 经纬度/海拔 与 拍摄时间（DateTimeOriginal）
+function parseExif(arrayBuffer){
+  try{
+    const view = new DataView(arrayBuffer);
+    if(arrayBuffer.byteLength < 12 || view.getUint16(0) !== 0xFFD8) return null; // 非 JPEG
+    let offset = 2, tiffStart = -1;
+    while(offset < view.byteLength){
+      const marker = view.getUint16(offset);
+      if((marker & 0xFF00) !== 0xFF00) break;
+      const segType = marker & 0xFF;
+      if(segType === 0xE1){
+        if(view.getUint32(offset+4) === 0x45786966 && view.getUint16(offset+8) === 0x0000){
+          tiffStart = offset + 10; break;   // 跳过 FFE1(2)+size(2)+"Exif\0\0"(6)
+        }
+      }
+      if(segType === 0xDA) break;            // SOS，图像数据开始
+      const segLen = view.getUint16(offset+2);
+      if(segLen <= 0) break;
+      offset += 2 + segLen;
+    }
+    if(tiffStart < 0 || tiffStart + 8 > view.byteLength) return null;
+    const le = view.getUint16(tiffStart) === 0x4949;   // II=小端, MM=大端
+    const r16 = o => view.getUint16(tiffStart+o, le);
+    const r32 = o => view.getUint32(tiffStart+o, le);
+    if(r16(2) !== 0x002A) return null;                  // TIFF 魔数
+    const typeSize = t => [0,1,1,2,4,8,1,1,2,4,8,4,8][t] || 1;
+    const entriesAt = ifdOff => {
+      const count = r16(ifdOff), map = {};
+      for(let i=0;i<count;i++){
+        const e = ifdOff + 2 + i*12;
+        map[r16(e)] = {type:r16(e+2), count:r32(e+4), valOff:e+8};
+      }
+      return map;
+    };
+    const rat = e => {
+      if(!e) return null;
+      // d 统一为绝对地址：tiffStart + 相对偏移
+      const d = (typeSize(e.type)*e.count > 4) ? tiffStart + r32(e.valOff) : tiffStart + e.valOff;
+      const out=[];
+      for(let i=0;i<e.count;i++){
+        const o=d+i*8, n=view.getUint32(o, le), den=view.getUint32(o+4, le);
+        out.push(den ? n/den : 0);
+      }
+      return out;
+    };
+    const str = e => {
+      if(!e) return null;
+      const d = (typeSize(e.type)*e.count>4) ? tiffStart + r32(e.valOff) : tiffStart + e.valOff;
+      let s=''; for(let i=0;i<e.count;i++){ const b=view.getUint8(d+i); if(!b) break; s+=String.fromCharCode(b); } return s;
+    };
+    const ifd0 = entriesAt(r32(4));
+    const G = ifd0[0x8825] ? entriesAt(r32(ifd0[0x8825].valOff)) : null;
+    const exifIFD = ifd0[0x8769] ? entriesAt(r32(ifd0[0x8769].valOff)) : null;
+    let lat=null, lon=null, alt=null, date=null;
+    if(G){
+      const la=rat(G[2]), laR=str(G[1]);
+      const lo=rat(G[4]), loR=str(G[3]);
+      if(la&&lo&&la.length>=3&&lo.length>=3){
+        let d=la[0]+la[1]/60+la[2]/3600; if(laR==='S') d=-d; lat=d;
+        let dd=lo[0]+lo[1]/60+lo[2]/3600; if(loR==='W') dd=-dd; lon=dd;
+      }
+      const a=rat(G[6]);  // GPSAltitude (tag 0x0006)，参考标志在 GPSAltitudeRef (tag 0x0005)
+      if(a&&a.length){ alt=a[0]; if(G[5] && view.getUint8(tiffStart+G[5].valOff)===1) alt=-alt; }
+    }
+    const ds = exifIFD ? (str(exifIFD[0x9003]) || str(exifIFD[0x9004])) : null;
+    if(ds){ const dd=new Date(ds.replace(/^(\d{4}):(\d{2}):(\d{2})/,'$1-$2-$3').replace(' ','T')); if(!isNaN(dd)) date=dd; }
+    if(!date && ifd0[0x0132]){ const s2=str(ifd0[0x0132]); if(s2){ const dd=new Date(s2.replace(/^(\d{4}):(\d{2}):(\d{2})/,'$1-$2-$3').replace(' ','T')); if(!isNaN(dd)) date=dd; } }
+    return {lat, lon, alt, date};
+  }catch(e){ return null; }
+}
+
+let stampUrl = null;
+let lastStamp = null;
+async function handleStamp(file){
+  if(!gateAction()) return;
+  showStampBanner('正在读取照片…');
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onerror = ()=>{ showStampBanner('无法读取该图片，请选择手机相册里的 JPG/PNG 照片。'); URL.revokeObjectURL(url); };
+  img.onload = async ()=>{
+    const buf = await file.arrayBuffer();
+    // 1) 同时读 EXIF 和 XMP，取第一份有有效 GPS 的
+    let exif=null, xmp=null;
+    try{ exif = parseExif(buf); }catch(e){}
+    try{ xmp = parseXmp(buf); }catch(e){}
+    const usedDate = (exif && exif.date) || (file.lastModified ? new Date(file.lastModified) : new Date());
+
+    // 2) 选 GPS：优先 EXIF，其次 XMP；要求 lat/lon 都存在且不是 (0,0)
+    let lat=null, lon=null, exifAlt=null, gpsSrc='';
+    const cands = [exif, xmp];
+    for(const c of cands){
+      if(!c) continue;
+      if(c.lat!=null && c.lon!=null && !(c.lat===0 && c.lon===0)){
+        lat=c.lat; lon=c.lon;
+        gpsSrc = (c===exif) ? 'EXIF' : 'XMP';
+        exifAlt = c.alt;
+        break;
+      }
+    }
+    // 3) 都没拿到 → 退回实时定位
+    let fromLive = false;
+    if(lat==null && state.lat!=null && state.lon!=null && !(state.lat===0 && state.lon===0)){
+      lat=state.lat; lon=state.lon; fromLive=true; gpsSrc='实时定位';
+    }
+
+    // 4) 海拔永远查 API（手机 GPS 海拔几乎都不可信，EXIF 里那个 0 是垃圾值）
+    //    API 失败时退回 EXIF/XMP 自带的海拔
+    let addr='', elev=null, src='';
+    if(lat!=null && lon!=null){
+      const tasks=[];
+      tasks.push(getElevation(lat,lon).then(r=>{ elev=r.elev; src=r.src; }).catch(()=>{}));
+      tasks.push(reverseGeocode(lat,lon).then(a=>{ addr=a||''; }));
+      await Promise.all(tasks);
+      if(elev==null && exifAlt!=null && exifAlt>0) elev = exifAlt;
+    }
+    if(!addr){
+      if(fromLive) addr='（实时定位）';
+      else if(lat!=null) addr='位置解析中…';
+      else addr='未获取位置';
+    }
+
+    // 5) 保存原图与元数据，烧印
+    lastStamp = { img, meta:{ elev, addr, usedDate, fromLive, gpsSrc, lat, lon, src } };
+    burnStamp();
+    countTrial();
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+// 重绘当前加印预览（手动水印保存后立即生效；drawWatermark 内部已叠加 OV 覆盖）
+function burnStamp(){
+  if(!lastStamp) return;
+  const { img, meta } = lastStamp;
+  const { elev, addr, usedDate, fromLive, gpsSrc, lat, lon, src } = meta;
+  const cw=img.naturalWidth, ch=img.naturalHeight;
+  const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+  const ctx=cv.getContext('2d');
+  ctx.drawImage(img,0,0,cw,ch);
+  drawWatermark(ctx,cw,ch,{elev, addr, date:usedDate});
+  const dataUrl = cv.toDataURL('image/jpeg', 0.92);
+  stampUrl = dataUrl;
+  $('stampImg').src = dataUrl;
+  $('stampPreview').style.display='block';
+  const locLabel = fromLive ? '实时定位' : (gpsSrc || '无位置');
+  const coordStr = lat!=null ? ' ('+lat.toFixed(4)+','+lon.toFixed(4)+')' : '';
+  const overNote = OV.enable ? ' · 已用手动值' : '';
+  showStampBanner('✓ 已加印 · 位置：'+locLabel+coordStr+' · 海拔：'+(elev!=null?Math.round(elev)+' m':'未知')+(src?'（'+src+'）':'')+overNote);
+}
+
+$('pickFile').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(f) handleStamp(f);
+});
+$('rePickBtn').addEventListener('click', ()=>{ $('stampPreview').style.display='none'; $('pickFile').value=''; showStampBanner(''); });
+$('saveStampBtn').addEventListener('click', ()=> saveDownload(stampUrl, showStampBanner));
+$('saveToAlbumBtn').addEventListener('click', ()=> saveToAlbum(stampUrl, showStampBanner));
+
+// 保存提示：微信内置浏览器会拦截下载按钮，只能长按图片保存
+const saveTip = isWeChat()
+  ? '<b>微信内保存方法：长按上方图片 →「保存图片」</b><br/>（下载按钮会被微信拦截，属浏览器限制）'
+  : '<b>长按上方图片 →「保存图片」即可存入相册</b>（最稳）';
+$('stampHint').innerHTML = saveTip;
+$('shotHint').innerHTML = isWeChat()
+  ? '微信内：长按上方图片 →「保存图片」'
+  : '长按图片存相册，或点「下载到手机」';
+
+applyAspect();
+// 落地卡片显示期间锁定背景滚动；定位延迟到卡片关闭后再启动，避免卡片上提前弹权限请求
+document.body.style.overflow = 'hidden';
+let booted = false;
+function bootApp(){
+  if(booted) return;
+  booted = true;
+  startFollow();
+}
+const landing = $('landing');
+$('openAppBtn').addEventListener('click', ()=>{
+  landing.style.display = 'none';
+  document.body.style.overflow = '';
+  bootApp();
+});
+$('copyLinkBtn').addEventListener('click', async ()=>{
+  try{
+    await navigator.clipboard.writeText(location.href);
+    const t = $('copiedTip'); t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 1500);
+  }catch(e){
+    window.prompt('复制此链接分享：', location.href);
+  }
+});
+
+// ============== 授权 / 试用（前端 MVP，生产校验须走后端） ==============
+const TRIAL_LIMIT = 5;
+const LS_TRIAL = 'tc_trial_used_v1', LS_LICENSE = 'tc_licensed_v1', LS_CODE = 'tc_license_code_v1';
+const LICENSE_API = '';   // 生产填后端校验地址，如 'https://your.api/verify-license'
+const PAY_URL = '';       // 微信支付页/二维码地址；留空则走小程序原生支付
+const CODE_SALT = 'TRAVELCAMERA-2026';  // 占位盐，生产由后端签发，客户端仅演示
+
+const lic = {
+  used: parseInt(localStorage.getItem(LS_TRIAL)||'0',10) || 0,
+  ok: localStorage.getItem(LS_LICENSE)==='1',
+  code: localStorage.getItem(LS_CODE)||''
+};
+function saveLic(){ localStorage.setItem(LS_TRIAL,String(lic.used)); localStorage.setItem(LS_LICENSE,lic.ok?'1':'0'); localStorage.setItem(LS_CODE,lic.code); }
+function trialLeft(){ return lic.ok ? Infinity : Math.max(0, TRIAL_LIMIT - lic.used); }
+
+function fnv1a(s){ let h=0x811c9dc5; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193); } return h>>>0; }
+// 演示用：本地校验激活码（格式 TC-XXXXXX-XX，末两位为盐哈希校验）。可被绕过，仅联调用。
+function validateCodeLocal(code){
+  code=(code||'').trim().toUpperCase();
+  const m=code.match(/^TC-([0-9A-Z]{6})-([0-9A-Z]{2})$/); if(!m) return false;
+  const sum=fnv1a(m[1]+CODE_SALT)%1296, exp=sum.toString(36).toUpperCase().padStart(2,'0');
+  return exp===m[2];
+}
+// 后端签发同款激活码（给后端参考；生产务必服务端生成，盐不进前端）
+function genCode(){ const c='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let b=''; for(let i=0;i<6;i++) b+=c[Math.floor(Math.random()*36)]; const sum=fnv1a(b+CODE_SALT)%1296; return 'TC-'+b+'-'+sum.toString(36).toUpperCase().padStart(2,'0'); }
+async function verifyLicense(code){
+  code=(code||'').trim().toUpperCase();
+  if(LICENSE_API){ try{ const r=await fetch(LICENSE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})}); const d=await r.json(); if(d&&d.ok) return true; }catch(e){} }
+  return validateCodeLocal(code);
+}
+async function activate(code){
+  const ok=await verifyLicense(code);
+  const msg=$('payMsg');
+  if(ok){ lic.ok=true; lic.code=code; saveLic(); updateLicUI(); hidePaywall(); msg.textContent=''; showLicBanner('✓ 已永久激活，感谢支持！'); }
+  else { msg.textContent='激活码无效，请检查后重试'; msg.className='pmsg err'; }
+  return ok;
+}
+function updateLicUI(){
+  const b=$('licBadge');
+  if(lic.ok){ b.textContent='✓ 已永久激活'; b.className='pill on'; }
+  else { b.textContent='试用剩 '+trialLeft()+' 次'; b.className='pill'; }
+}
+function showPaywall(){
+  $('payTitle').textContent = lic.used>=TRIAL_LIMIT ? '试用已用完' : '解锁专业版';
+  $('paySub').textContent = lic.ok ? '' : ('免费试用已用 '+lic.used+' / '+TRIAL_LIMIT+' 次');
+  $('payClose').textContent = lic.ok ? '关闭' : ('稍后再说（剩 '+trialLeft()+' 次试用）');
+  $('payMsg').textContent=''; $('payMsg').className='pmsg';
+  $('paywall').style.display='flex';
+}
+function hidePaywall(){ $('paywall').style.display='none'; }
+function gateAction(){ if(lic.ok) return true; if(lic.used>=TRIAL_LIMIT){ showPaywall(); return false; } return true; }
+function countTrial(){ if(!lic.ok){ lic.used++; saveLic(); updateLicUI(); } }
+function startPurchase(){
+  // 小程序内：通知原生页调 wx.requestPayment（需小程序内建 /pages/pay 页）
+  if(window.__wxjs_environment==='miniprogram' && typeof wx!=='undefined' && wx.miniProgram){
+    try{ wx.miniProgram.postMessage({data:{type:'buy',product:'pro',price:19.9}}); wx.miniProgram.navigateTo({url:'/pages/pay/pay'}); }catch(e){}
+    return;
+  }
+  if(PAY_URL){ try{ window.open(PAY_URL,'_blank'); }catch(e){} return; }
+  const msg=$('payMsg'); msg.textContent='支付需后端对接：填 PAY_URL 或小程序原生支付页'; msg.className='pmsg err';
+}
+function showLicBanner(m){ const b=$('stampBanner'); if(!m){ b.classList.remove('show'); return; } b.textContent=m; b.classList.add('show'); }
+
+$('buyBtn').addEventListener('click', startPurchase);
+$('actBtn').addEventListener('click', ()=>{ const c=$('payCode').value; if(!c||!c.trim()){ const msg=$('payMsg'); msg.textContent='请输入激活码'; msg.className='pmsg err'; return; } activate(c); });
+$('payClose').addEventListener('click', hidePaywall);
+updateLicUI();
+</script>
+</body>
+</html>
