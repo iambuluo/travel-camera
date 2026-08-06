@@ -154,43 +154,46 @@
   #landing .lcopied.show{opacity:1;}
 
   .pills{display:flex;gap:8px;align-items:center;}
-  #licBadge{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);
-        color:var(--muted);border:1px solid var(--line);}
-  #licBadge.on{color:var(--accent);border-color:rgba(52,199,89,.4);background:rgba(52,199,89,.12);}
+  #sponsorBadge{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);
+        color:var(--accent);border:1px solid rgba(52,199,89,.4);cursor:pointer;}
+  #sponsorBadge:active{transform:scale(.97);}
 
   /* ---------- 付费墙 / 授权 ---------- */
-  #paywall{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;
+  #sponsor{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;
     padding:24px 16px calc(env(safe-area-inset-bottom) + 24px);overflow-y:auto;
     background:rgba(4,6,9,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-  #paywall .pcard{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card) 0%,#10141a 100%);
+  #sponsor .pcard{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card) 0%,#10141a 100%);
     border:1px solid var(--line);border-radius:22px;padding:28px 24px 24px;position:relative;overflow:hidden;
     box-shadow:0 24px 60px rgba(0,0,0,.55);}
-  #paywall .pcrown{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  #sponsor .pcrown{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
     font-size:32px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.4);margin-bottom:14px;}
-  #paywall .ptitle{font-size:24px;font-weight:700;}
-  #paywall .psub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;}
-  #paywall .pprice{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;}
-  #paywall .pprice .num{font-size:38px;font-weight:800;color:var(--accent);letter-spacing:-1px;}
-  #paywall .pprice .unit{font-size:14px;color:var(--muted);}
-  #paywall .pfeat{margin:14px 0 6px;display:flex;flex-direction:column;gap:9px;}
-  #paywall .pfeat .pf{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--txt);}
-  #paywall .pfeat .pf .tk{color:var(--accent);}
-  #paywall .pbuy{width:100%;margin-top:18px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
+  #sponsor .ptitle{font-size:24px;font-weight:700;}
+  #sponsor .psub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;}
+  #sponsor .pprice{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;}
+  #sponsor .pprice .num{font-size:38px;font-weight:800;color:var(--accent);letter-spacing:-1px;}
+  #sponsor .pprice .unit{font-size:14px;color:var(--muted);}
+  #sponsor .pfeat{margin:14px 0 6px;display:flex;flex-direction:column;gap:9px;}
+  #sponsor .pfeat .pf{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--txt);}
+  #sponsor .pfeat .pf .tk{color:var(--accent);}
+  #sponsor .pbuy{width:100%;margin-top:18px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
     font-size:17px;font-weight:700;padding:15px;background:var(--accent);color:#05140a;transition:.15s;
     display:flex;align-items:center;justify-content:center;gap:8px;}
-  #paywall .pbuy:active{transform:scale(.97);}
-  #paywall .pclose{width:100%;margin-top:10px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
+  #sponsor .pbuy:active{transform:scale(.97);}
+  #sponsor .pclose{width:100%;margin-top:10px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
     font-size:14px;font-weight:600;padding:12px;background:transparent;color:var(--muted);}
-  #paywall .pdivider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px;}
-  #paywall .pdivider::before,#paywall .pdivider::after{content:"";flex:1;height:1px;background:var(--line);}
-  #paywall .pin{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
+  #sponsor .pdivider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px;}
+  #sponsor .pdivider::before,#sponsor .pdivider::after{content:"";flex:1;height:1px;background:var(--line);}
+  #sponsor .pin{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
     color:var(--txt);font-family:var(--font);font-size:15px;padding:12px 14px;text-transform:uppercase;}
-  #paywall .pin:focus{outline:none;border-color:var(--accent2);}
-  #paywall .pact{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--card2);
+  #sponsor .pin:focus{outline:none;border-color:var(--accent2);}
+  #sponsor .pact{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--card2);
     color:var(--txt);font-family:var(--font);font-size:15px;font-weight:600;padding:13px;cursor:pointer;}
-  #paywall .pmsg{font-size:12px;margin-top:10px;min-height:14px;text-align:center;}
-  #paywall .pmsg.ok{color:var(--accent);}
-  #paywall .pmsg.err{color:var(--err);}
+  #sponsor .pmsg{font-size:12px;margin-top:10px;min-height:14px;text-align:center;}
+  #sponsor .pmsg.ok{color:var(--accent);}
+  #sponsor .pmsg.err{color:var(--err);}
+  #sponsor .sponsorQrWrap{display:flex;flex-direction:column;align-items:center;margin:16px 0 6px;}
+  #sponsor .sponsorQr{width:200px;height:200px;border-radius:14px;background:#fff;display:none;}
+  #sponsor .sponsorQrTip{font-size:12px;color:var(--muted);text-align:center;line-height:1.6;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -221,28 +224,25 @@
     <button class="lbtn ghost" id="copyLinkBtn">复制链接</button>
     <div class="lcopied" id="copiedTip">已复制链接</div>
 
-    <div class="lfoot">专业版 ¥19.9 永久解锁 · 免费试用 5 次<br/>PWA · 支持安卓 / 鸿蒙 · 需 HTTPS 与定位授权<br/>旅游相机 · 让每张照片都记得自己在哪、多高、何时</div>
+    <div class="lfoot">完全免费 · 喜欢请请我喝杯咖啡 ☕<br/>PWA · 支持安卓 / 鸿蒙 · 需 HTTPS 与定位授权<br/>旅游相机 · 让每张照片都记得自己在哪、多高、何时</div>
   </div>
 </div>
 
-<!-- 付费墙 / 授权 -->
-<div id="paywall">
+<!-- 赞助弹窗（完全免费） -->
+<div id="sponsor">
   <div class="pcard">
-    <div class="pcrown">👑</div>
-    <div class="ptitle" id="payTitle">解锁专业版</div>
-    <div class="psub" id="paySub">免费试用已用 0 / 5 次</div>
-    <div class="pprice"><span class="num">¥19.9</span><span class="unit">一次付费 · 永久免费使用</span></div>
-    <div class="pfeat">
-      <div class="pf"><span class="tk">✓</span><span>无限次相机叠加拍照加印海拔水印</span></div>
-      <div class="pf"><span class="tk">✓</span><span>无限次相册照片导入烧录海拔水印</span></div>
-      <div class="pf"><span class="tk">✓</span><span>实时海拔 / 位置 / 精度 / 速度全功能</span></div>
+    <div class="pcrown">☕</div>
+    <div class="ptitle">请我喝杯咖啡</div>
+    <div class="psub">旅游相机完全免费、永久可用。<br/>如果它帮到了你，欢迎请我喝杯咖啡 ☕</div>
+    <div class="sponsorQrWrap">
+      <img id="sponsorQr" class="sponsorQr" alt="微信赞赏码" />
+      <div id="sponsorQrTip" class="sponsorQrTip">赞赏码待添加：把公众号赞赏码截图发给开发者，即可启用长按打赏</div>
     </div>
-    <button class="pbuy" id="buyBtn">¥19.9 永久解锁</button>
-    <div class="pdivider">已有激活码？</div>
-    <input class="pin" id="payCode" placeholder="输入激活码 如 TC-XXXX-XX" />
-    <button class="pact" id="actBtn">激活永久版</button>
-    <div class="pmsg" id="payMsg"></div>
-    <button class="pclose" id="payClose">稍后再说（剩 5 次试用）</button>
+    <div class="pfeat">
+      <div class="pf"><span class="tk">✓</span><span>长按上方二维码，用微信赞赏即可</span></div>
+      <div class="pf"><span class="tk">✓</span><span>所有功能永久免费，无需激活码</span></div>
+    </div>
+    <button class="pclose" id="spClose">谢谢，不用了</button>
   </div>
 </div>
 
@@ -251,7 +251,7 @@
     <h1>实时海拔</h1>
     <div class="pills">
       <div class="pill"><span class="dot" id="gpsDot"></span><span id="gpsText">定位中…</span></div>
-      <div class="pill" id="licBadge">试用剩 5 次</div>
+      <div class="pill" id="sponsorBadge">☕ 请喝咖啡</div>
     </div>
   </header>
 
@@ -679,7 +679,6 @@ function drawWatermark(ctx, w, h, opts){
 }
 
 async function capture(){
-  if(!gateAction()) return;
   const v=$('cam'); const vw=v.videoWidth, vh=v.videoHeight; if(!vw) return;
   if(!state.addr && state.lat!=null){ await reverseGeocode(state.lat, state.lon); }
 
@@ -725,14 +724,12 @@ async function capture(){
   $('shotImg').src = shotDataUrl;
   $('saveBtn').onclick = ()=> saveDownload(shotDataUrl, showCamBanner);
   $('shot').classList.add('show');
-  countTrial();
 }
 $('shutter').addEventListener('click', capture);
 $('retakeBtn').addEventListener('click', ()=> $('shot').classList.remove('show'));
 
 // 系统原生相机拍照（关闭 in-app 流避免占用）
 $('sysCamBtn').addEventListener('click', ()=>{
-  if(!gateAction()) return;
   stopCamera();
   try{ $('sysCamInput').value=''; }catch(e){}
   $('sysCamInput').click();
@@ -926,7 +923,6 @@ function parseExif(arrayBuffer){
 let stampUrl = null;
 let lastStamp = null;
 async function handleStamp(file){
-  if(!gateAction()) return;
   showStampBanner('正在读取照片…');
   const url = URL.createObjectURL(file);
   const img = new Image();
@@ -976,7 +972,6 @@ async function handleStamp(file){
     // 5) 保存原图与元数据，烧印
     lastStamp = { img, meta:{ elev, addr, usedDate, fromLive, gpsSrc, lat, lon, src } };
     burnStamp();
-    countTrial();
     URL.revokeObjectURL(url);
   };
   img.src=url;
@@ -1044,108 +1039,16 @@ $('copyLinkBtn').addEventListener('click', async ()=>{
   }
 });
 
-// ============== 授权 / 试用（前端 MVP，生产校验须走后端） ==============
-const TRIAL_LIMIT = 5;
-const LS_TRIAL = 'tc_trial_used_v1', LS_LICENSE = 'tc_licensed_v1', LS_CODE = 'tc_license_code_v1';
-const LICENSE_API = '/api/verify-license';   // 后端校验地址（同域 Vercel Serverless），优先走远程校验
-const PAY_URL = '';       // 微信支付页/二维码地址；留空则走小程序原生支付
-const CODE_SALT = 'TRAVELCAMERA-2026';  // 占位盐，生产由后端签发，客户端仅演示
+// ============== 赞助（完全免费模式） ==============
 
-const lic = {
-  used: parseInt(localStorage.getItem(LS_TRIAL)||'0',10) || 0,
-  ok: localStorage.getItem(LS_LICENSE)==='1',
-  code: localStorage.getItem(LS_CODE)||''
-};
-function saveLic(){ localStorage.setItem(LS_TRIAL,String(lic.used)); localStorage.setItem(LS_LICENSE,lic.ok?'1':'0'); localStorage.setItem(LS_CODE,lic.code); }
-function trialLeft(){ return lic.ok ? Infinity : Math.max(0, TRIAL_LIMIT - lic.used); }
-
-function fnv1a(s){ let h=0x811c9dc5; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193); } return h>>>0; }
-// 演示用：本地校验激活码（格式 TC-XXXXXX-XX，末两位为盐哈希校验）。可被绕过，仅联调用。
-function validateCodeLocal(code){
-  code=(code||'').trim().toUpperCase();
-  const m=code.match(/^TC-([0-9A-Z]{6})-([0-9A-Z]{2})$/); if(!m) return false;
-  const sum=fnv1a(m[1]+CODE_SALT)%1296, exp=sum.toString(36).toUpperCase().padStart(2,'0');
-  return exp===m[2];
-}
-// 后端签发同款激活码（给后端参考；生产务必服务端生成，盐不进前端）
-function genCode(){ const c='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let b=''; for(let i=0;i<6;i++) b+=c[Math.floor(Math.random()*36)]; const sum=fnv1a(b+CODE_SALT)%1296; return 'TC-'+b+'-'+sum.toString(36).toUpperCase().padStart(2,'0'); }
-async function verifyLicense(code){
-  code=(code||'').trim().toUpperCase();
-  if(LICENSE_API){ try{ const r=await fetch(LICENSE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})}); const d=await r.json(); if(d&&d.ok) return true; }catch(e){} }
-  return validateCodeLocal(code);
-}
-async function activate(code){
-  const ok=await verifyLicense(code);
-  const msg=$('payMsg');
-  if(ok){ lic.ok=true; lic.code=code; saveLic(); updateLicUI(); hidePaywall(); msg.textContent=''; showLicBanner('✓ 已永久激活，感谢支持！'); }
-  else { msg.textContent='激活码无效，请检查后重试'; msg.className='pmsg err'; }
-  return ok;
-}
-function updateLicUI(){
-  const b=$('licBadge');
-  if(lic.ok){ b.textContent='✓ 已永久激活'; b.className='pill on'; }
-  else { b.textContent='试用剩 '+trialLeft()+' 次'; b.className='pill'; }
-}
-function showPaywall(){
-  $('payTitle').textContent = lic.used>=TRIAL_LIMIT ? '试用已用完' : '解锁专业版';
-  $('paySub').textContent = lic.ok ? '' : ('免费试用已用 '+lic.used+' / '+TRIAL_LIMIT+' 次');
-  $('payClose').textContent = lic.ok ? '关闭' : ('稍后再说（剩 '+trialLeft()+' 次试用）');
-  $('payMsg').textContent=''; $('payMsg').className='pmsg';
-  $('paywall').style.display='flex';
-}
-function hidePaywall(){ $('paywall').style.display='none'; }
-function gateAction(){ if(lic.ok) return true; if(lic.used>=TRIAL_LIMIT){ showPaywall(); return false; } return true; }
-function countTrial(){ if(!lic.ok){ lic.used++; saveLic(); updateLicUI(); } }
-async function startPurchase(){
-  if(lic.ok){ hidePaywall(); return; }
-  const msg=$('payMsg');
-  const inMini = (window.__wxjs_environment==='miniprogram') || (typeof wx!=='undefined' && wx.miniProgram);
-  // 小程序内：由小程序原生支付页完成下单+支付，H5 直接跳转，避免重复订单号
-  if(inMini){
-    try{ wx.miniProgram.navigateTo({url:'/pages/pay/pay'}); }catch(e){ msg.textContent='请在小程序中打开以完成支付'; msg.className='pmsg err'; }
-    return;
-  }
-  // 外部浏览器：走微信 H5 支付（MWEB）
-  msg.textContent='正在创建订单…'; msg.className='pmsg';
-  let resp;
-  try{
-    resp = await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tradeType:'MWEB', amount:1990})});
-  }catch(e){ msg.textContent='网络错误，无法连接支付服务'; msg.className='pmsg err'; return; }
-  const d = await resp.json().catch(()=>({}));
-  if(!resp.ok || !d.ok){ msg.textContent = d.error || d.msg || '创建订单失败'; msg.className='pmsg err'; return; }
-  // MOCK 模式：后端未配微信凭证，已直接发码
-  if(d.mock && d.code){ activate(d.code); return; }
-  localStorage.setItem('tc_order', d.orderId);
-  if(d.mwebUrl){
-    const redirect = location.origin + location.pathname + '?order=' + encodeURIComponent(d.orderId);
-    location.href = d.mwebUrl + '&redirect_url=' + encodeURIComponent(redirect);
-    return;
-  }
-  msg.textContent='无法发起支付，请稍后再试'; msg.className='pmsg err';
-}
-// 支付回传处理：小程序 web-view 回传 ?code=，或 MWEB 支付后 redirect ?order=
-(function handlePayReturn(){
-  try{
-    const params = new URLSearchParams(location.search);
-    const code = params.get('code');
-    const order = params.get('order');
-    const done = ()=>{ history.replaceState(null,'',location.pathname); };
-    if(code){ activate(code).then(done); return; }
-    if(order){
-      fetch('/api/get-code?orderId='+encodeURIComponent(order)).then(r=>r.json()).then(d=>{
-        if(d.ok && d.code){ activate(d.code); }
-        else { showPaywall(); }
-        done();
-      }).catch(()=>{ showPaywall(); done(); });
-    }
-  }catch(e){}
+function showSponsor(){ const el=$('sponsor'); if(el) el.style.display='flex'; }
+function hideSponsor(){ const el=$('sponsor'); if(el) el.style.display='none'; }
+(function initSponsor(){
+  const qr=$('sponsorQr');
+  if(qr && qr.getAttribute('src')){ qr.style.display='block'; const t=$('sponsorQrTip'); if(t) t.style.display='none'; }
 })();
-function showLicBanner(m){ const b=$('stampBanner'); if(!m){ b.classList.remove('show'); return; } b.textContent=m; b.classList.add('show'); }
-
-$('buyBtn').addEventListener('click', startPurchase);
-$('actBtn').addEventListener('click', ()=>{ const c=$('payCode').value; if(!c||!c.trim()){ const msg=$('payMsg'); msg.textContent='请输入激活码'; msg.className='pmsg err'; return; } activate(c); });
-$('payClose').addEventListener('click', hidePaywall);
-updateLicUI();
+$('sponsorBadge').addEventListener('click', showSponsor);
+$('spClose').addEventListener('click', hideSponsor);
 </script>
 </body>
 </html>
