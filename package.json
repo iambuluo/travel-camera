@@ -1,0 +1,9 @@
+{
+  "name": "travel-camera-cn",
+  "version": "1.0.0",
+  "description": "旅游相机-带海拔 国内部署包（纯静态 index.html + 可选零依赖 Node 服务）",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "private": true
+}
