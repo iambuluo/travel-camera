@@ -59,7 +59,7 @@ vercel.json             静态部署配置
 订单状态默认存内存（仅开发/mock 可用）。生产建议绑定 **Vercel KV**（Storage → Create → KV → Connect to project），绑定后 `KV_REST_API_URL` / `KV_REST_API_TOKEN` 自动注入，函数会自动改用 KV，多实例共享。
 
 ### MOCK 模式联调
-不填任何 `WX_*` 变量时，`/api/create-order` 直接返回激活码（标记 `mock:true`），前端点击"购买"会立即激活。用于在没有商户号时验证：付费墙 → 下单 → 发码 → 激活 全链路。
+不填任何 `WX_*` 变量时，`/api/create-order` 直接返回激活码（标记 `mock:true`），前端点击"购买"会立即激活。用于在没有商户号时验证：下单 → 发码 → 激活 全链路。
 
 ## 微信小程序壳（叮当画）
 `miniprogram/` 是 web-view 壳，让微信内支付走原生 JSAPI：
