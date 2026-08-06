@@ -154,46 +154,6 @@
   #landing .lcopied.show{opacity:1;}
 
   .pills{display:flex;gap:8px;align-items:center;}
-  #sponsorBadge{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);
-        color:var(--accent);border:1px solid rgba(52,199,89,.4);cursor:pointer;}
-  #sponsorBadge:active{transform:scale(.97);}
-
-  /* ---------- 付费墙 / 授权 ---------- */
-  #sponsor{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;
-    padding:24px 16px calc(env(safe-area-inset-bottom) + 24px);overflow-y:auto;
-    background:rgba(4,6,9,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-  #sponsor .pcard{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card) 0%,#10141a 100%);
-    border:1px solid var(--line);border-radius:22px;padding:28px 24px 24px;position:relative;overflow:hidden;
-    box-shadow:0 24px 60px rgba(0,0,0,.55);}
-  #sponsor .pcrown{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;
-    font-size:32px;background:rgba(52,199,89,.15);border:1px solid rgba(52,199,89,.4);margin-bottom:14px;}
-  #sponsor .ptitle{font-size:24px;font-weight:700;}
-  #sponsor .psub{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;}
-  #sponsor .pprice{display:flex;align-items:baseline;gap:8px;margin:18px 0 4px;}
-  #sponsor .pprice .num{font-size:38px;font-weight:800;color:var(--accent);letter-spacing:-1px;}
-  #sponsor .pprice .unit{font-size:14px;color:var(--muted);}
-  #sponsor .pfeat{margin:14px 0 6px;display:flex;flex-direction:column;gap:9px;}
-  #sponsor .pfeat .pf{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--txt);}
-  #sponsor .pfeat .pf .tk{color:var(--accent);}
-  #sponsor .pbuy{width:100%;margin-top:18px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
-    font-size:17px;font-weight:700;padding:15px;background:var(--accent);color:#05140a;transition:.15s;
-    display:flex;align-items:center;justify-content:center;gap:8px;}
-  #sponsor .pbuy:active{transform:scale(.97);}
-  #sponsor .pclose{width:100%;margin-top:10px;border:none;border-radius:16px;cursor:pointer;font-family:var(--font);
-    font-size:14px;font-weight:600;padding:12px;background:transparent;color:var(--muted);}
-  #sponsor .pdivider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px;}
-  #sponsor .pdivider::before,#sponsor .pdivider::after{content:"";flex:1;height:1px;background:var(--line);}
-  #sponsor .pin{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;
-    color:var(--txt);font-family:var(--font);font-size:15px;padding:12px 14px;text-transform:uppercase;}
-  #sponsor .pin:focus{outline:none;border-color:var(--accent2);}
-  #sponsor .pact{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--card2);
-    color:var(--txt);font-family:var(--font);font-size:15px;font-weight:600;padding:13px;cursor:pointer;}
-  #sponsor .pmsg{font-size:12px;margin-top:10px;min-height:14px;text-align:center;}
-  #sponsor .pmsg.ok{color:var(--accent);}
-  #sponsor .pmsg.err{color:var(--err);}
-  #sponsor .sponsorQrWrap{display:flex;flex-direction:column;align-items:center;margin:16px 0 6px;}
-  #sponsor .sponsorQr{width:200px;height:200px;border-radius:14px;background:#fff;display:none;}
-  #sponsor .sponsorQrTip{font-size:12px;color:var(--muted);text-align:center;line-height:1.6;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -224,25 +184,7 @@
     <button class="lbtn ghost" id="copyLinkBtn">复制链接</button>
     <div class="lcopied" id="copiedTip">已复制链接</div>
 
-    <div class="lfoot">完全免费 · 喜欢请请我喝杯咖啡 ☕<br/>PWA · 支持安卓 / 鸿蒙 · 需 HTTPS 与定位授权<br/>旅游相机 · 让每张照片都记得自己在哪、多高、何时</div>
-  </div>
-</div>
-
-<!-- 赞助弹窗（完全免费） -->
-<div id="sponsor">
-  <div class="pcard">
-    <div class="pcrown">☕</div>
-    <div class="ptitle">请我喝杯咖啡</div>
-    <div class="psub">旅游相机完全免费、永久可用。<br/>如果它帮到了你，欢迎请我喝杯咖啡 ☕</div>
-    <div class="sponsorQrWrap">
-      <img id="sponsorQr" class="sponsorQr" alt="微信赞赏码" />
-      <div id="sponsorQrTip" class="sponsorQrTip">赞赏码待添加：把公众号赞赏码截图发给开发者，即可启用长按打赏</div>
-    </div>
-    <div class="pfeat">
-      <div class="pf"><span class="tk">✓</span><span>长按上方二维码，用微信赞赏即可</span></div>
-      <div class="pf"><span class="tk">✓</span><span>所有功能永久免费，无需激活码</span></div>
-    </div>
-    <button class="pclose" id="spClose">谢谢，不用了</button>
+    <div class="lfoot">完全免费 · 永久可用 · 无需注册<br/>PWA · 支持安卓 / 鸿蒙 · 需 HTTPS 与定位授权<br/>旅游相机 · 让每张照片都记得自己在哪、多高、何时</div>
   </div>
 </div>
 
@@ -251,7 +193,6 @@
     <h1>实时海拔</h1>
     <div class="pills">
       <div class="pill"><span class="dot" id="gpsDot"></span><span id="gpsText">定位中…</span></div>
-      <div class="pill" id="sponsorBadge">☕ 请喝咖啡</div>
     </div>
   </header>
 
@@ -1039,16 +980,6 @@ $('copyLinkBtn').addEventListener('click', async ()=>{
   }
 });
 
-// ============== 赞助（完全免费模式） ==============
-
-function showSponsor(){ const el=$('sponsor'); if(el) el.style.display='flex'; }
-function hideSponsor(){ const el=$('sponsor'); if(el) el.style.display='none'; }
-(function initSponsor(){
-  const qr=$('sponsorQr');
-  if(qr && qr.getAttribute('src')){ qr.style.display='block'; const t=$('sponsorQrTip'); if(t) t.style.display='none'; }
-})();
-$('sponsorBadge').addEventListener('click', showSponsor);
-$('spClose').addEventListener('click', hideSponsor);
 </script>
 </body>
 </html>
