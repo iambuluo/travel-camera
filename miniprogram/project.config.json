@@ -1,0 +1,11 @@
+{
+  "appid": "wxREPLACE_WITH_DINGDANGHUA_APPID",
+  "compileType": "miniprogram",
+  "projectname": "travel-camera-mini",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "minified": true
+  },
+  "miniprogramRoot": "./"
+}

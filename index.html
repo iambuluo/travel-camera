@@ -1047,7 +1047,7 @@ $('copyLinkBtn').addEventListener('click', async ()=>{
 // ============== 授权 / 试用（前端 MVP，生产校验须走后端） ==============
 const TRIAL_LIMIT = 5;
 const LS_TRIAL = 'tc_trial_used_v1', LS_LICENSE = 'tc_licensed_v1', LS_CODE = 'tc_license_code_v1';
-const LICENSE_API = '';   // 生产填后端校验地址，如 'https://your.api/verify-license'
+const LICENSE_API = '/api/verify-license';   // 后端校验地址（同域 Vercel Serverless），优先走远程校验
 const PAY_URL = '';       // 微信支付页/二维码地址；留空则走小程序原生支付
 const CODE_SALT = 'TRAVELCAMERA-2026';  // 占位盐，生产由后端签发，客户端仅演示
 
@@ -1096,15 +1096,50 @@ function showPaywall(){
 function hidePaywall(){ $('paywall').style.display='none'; }
 function gateAction(){ if(lic.ok) return true; if(lic.used>=TRIAL_LIMIT){ showPaywall(); return false; } return true; }
 function countTrial(){ if(!lic.ok){ lic.used++; saveLic(); updateLicUI(); } }
-function startPurchase(){
-  // 小程序内：通知原生页调 wx.requestPayment（需小程序内建 /pages/pay 页）
-  if(window.__wxjs_environment==='miniprogram' && typeof wx!=='undefined' && wx.miniProgram){
-    try{ wx.miniProgram.postMessage({data:{type:'buy',product:'pro',price:19.9}}); wx.miniProgram.navigateTo({url:'/pages/pay/pay'}); }catch(e){}
+async function startPurchase(){
+  if(lic.ok){ hidePaywall(); return; }
+  const msg=$('payMsg');
+  const inMini = (window.__wxjs_environment==='miniprogram') || (typeof wx!=='undefined' && wx.miniProgram);
+  // 小程序内：由小程序原生支付页完成下单+支付，H5 直接跳转，避免重复订单号
+  if(inMini){
+    try{ wx.miniProgram.navigateTo({url:'/pages/pay/pay'}); }catch(e){ msg.textContent='请在小程序中打开以完成支付'; msg.className='pmsg err'; }
     return;
   }
-  if(PAY_URL){ try{ window.open(PAY_URL,'_blank'); }catch(e){} return; }
-  const msg=$('payMsg'); msg.textContent='支付需后端对接：填 PAY_URL 或小程序原生支付页'; msg.className='pmsg err';
+  // 外部浏览器：走微信 H5 支付（MWEB）
+  msg.textContent='正在创建订单…'; msg.className='pmsg';
+  let resp;
+  try{
+    resp = await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tradeType:'MWEB', amount:1990})});
+  }catch(e){ msg.textContent='网络错误，无法连接支付服务'; msg.className='pmsg err'; return; }
+  const d = await resp.json().catch(()=>({}));
+  if(!resp.ok || !d.ok){ msg.textContent = d.error || d.msg || '创建订单失败'; msg.className='pmsg err'; return; }
+  // MOCK 模式：后端未配微信凭证，已直接发码
+  if(d.mock && d.code){ activate(d.code); return; }
+  localStorage.setItem('tc_order', d.orderId);
+  if(d.mwebUrl){
+    const redirect = location.origin + location.pathname + '?order=' + encodeURIComponent(d.orderId);
+    location.href = d.mwebUrl + '&redirect_url=' + encodeURIComponent(redirect);
+    return;
+  }
+  msg.textContent='无法发起支付，请稍后再试'; msg.className='pmsg err';
 }
+// 支付回传处理：小程序 web-view 回传 ?code=，或 MWEB 支付后 redirect ?order=
+(function handlePayReturn(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    const order = params.get('order');
+    const done = ()=>{ history.replaceState(null,'',location.pathname); };
+    if(code){ activate(code).then(done); return; }
+    if(order){
+      fetch('/api/get-code?orderId='+encodeURIComponent(order)).then(r=>r.json()).then(d=>{
+        if(d.ok && d.code){ activate(d.code); }
+        else { showPaywall(); }
+        done();
+      }).catch(()=>{ showPaywall(); done(); });
+    }
+  }catch(e){}
+})();
 function showLicBanner(m){ const b=$('stampBanner'); if(!m){ b.classList.remove('show'); return; } b.textContent=m; b.classList.add('show'); }
 
 $('buyBtn').addEventListener('click', startPurchase);

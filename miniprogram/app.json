@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/webview/webview",
+    "pages/pay/pay"
+  ],
+  "window": {
+    "navigationBarTitleText": "旅游相机·带海拔",
+    "navigationBarBackgroundColor": "#0b1220",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0b1220"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于在照片上标注海拔与位置"
+    }
+  },
+  "sitemapLocation": "sitemap.json"
+}
