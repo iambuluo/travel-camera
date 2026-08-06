@@ -2,3 +2,4 @@
 .workbuddy/
 travel-camera-source.zip
 *.zip
+__pycache__/
